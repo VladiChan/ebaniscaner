@@ -82,14 +82,11 @@ const closeModal = () => {
   showResultModal.value = false
 }
 </script>
-
 <template>
   <div class="scanner-container">
-    <!-- Только камера и ошибки -->
+    <!-- Камера -->
     <div class="camera-wrapper">
       <video ref="video" playsinline muted class="camera-video"></video>
-      
-      <!-- Canvas нужен только для внутреннего захвата кадра (невидимый) -->
       <canvas ref="canvas" style="display: none;"></canvas>
 
       <div v-if="!stream" class="placeholder">
@@ -97,11 +94,12 @@ const closeModal = () => {
       </div>
     </div>
 
-    <!-- Сообщения об ошибках сканирования или статусе -->
+    <!-- Ошибки -->
     <div v-if="errorMessage" class="error-message">
       {{ errorMessage }}
     </div>
 
+    <!-- Кнопка сканирования -->
     <button @click="scanNow" class="scan-button">
       Сканировать QR-код
     </button>
@@ -117,25 +115,27 @@ const closeModal = () => {
 </template>
 
 <style scoped>
-/* ... оставляем почти всё как было ... */
+/* Главный контейнер — теперь просто центрирует всё на чистом фоне */
 .scanner-container {
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 20px;
-  background: #e0e0e0;
   min-height: 100vh;
+  background: white;              /* ← чистый белый фон (можно поменять на #f5f5f5, #000 и т.д.) */
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  align-items: center;
+  padding: 40px 20px 60px;
+  gap: 30px;
 }
 
+/* Квадрат с камерой — остался прежний, но без серой обёртки */
 .camera-wrapper {
   position: relative;
-  background: #333;
-  border-radius: 24px;
-  overflow: hidden;
+  width: 100%;
+  max-width: 400px;
   aspect-ratio: 1 / 1;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+  background: #000;               /* чёрный фон под видео */
 }
 
 .camera-video {
@@ -150,36 +150,41 @@ const closeModal = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #444;
+  background: rgba(0, 0, 0, 0.8);
   color: white;
   font-size: 18px;
+  text-align: center;
   padding: 20px;
-  text-align: center;
 }
 
+/* Ошибки */
 .error-message {
-  background: #ff4444;
+  background: #ff3b30;
   color: white;
-  padding: 14px;
-  border-radius: 12px;
+  padding: 16px 24px;
+  border-radius: 16px;
+  font-weight: 600;
+  max-width: 400px;
   text-align: center;
-  font-weight: 500;
 }
 
+/* Кнопка — чуть больше воздуха снизу */
 .scan-button {
-  background: #333;
+  background: #000;
   color: white;
   border: none;
-  padding: 18px;
-  border-radius: 30px;
-  font-size: 18px;
+  padding: 20px 40px;
+  border-radius: 50px;
+  font-size: 19px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   transition: all 0.2s;
+  min-width: 280px;
 }
 
 .scan-button:active {
-  transform: scale(0.96);
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 </style>
