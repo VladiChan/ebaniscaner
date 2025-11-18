@@ -2,15 +2,15 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import jsQR from 'jsqr'
-import QrResultModal from './QrResultModal.vue' // <-- новый компонент
+import QrResultModal from './QrResultModal.vue'
 
 const video = ref(null)
 const canvas = ref(null)
 const stream = ref(null)
-const errorMessage = ref('')        // только ошибки камеры
-const showResultModal = ref(false)  // управляем модалкой
-const lastScannedData = ref('')     // данные для передачи в модалку
-const lastFrameImage = ref('')      // base64-кадр с зелёной рамкой
+const errorMessage = ref('')
+const showResultModal = ref(false)
+const lastScannedData = ref('')
+const lastFrameImage = ref('')
 
 onMounted(async () => {
   try {
@@ -22,15 +22,13 @@ onMounted(async () => {
       video.value.play()
     }
   } catch (err) {
-    errorMessage.value = 'Нет доступа к камере или она не найдена'
+    errorMessage.value = 'Нет доступа к камере'
     console.error(err)
   }
 })
 
 onUnmounted(() => {
-  if (stream.value) {
-    stream.value.getTracks().forEach(t => t.stop())
-  }
+  if (stream.value) stream.value.getTracks().forEach(t => t.stop())
 })
 
 const scanNow = () => {
@@ -50,16 +48,11 @@ const scanNow = () => {
   })
 
   if (code) {
-    // Рисуем зелёную рамку
     drawGreenBorder(ctx, code.location)
-
-    // Сохраняем кадр с рамкой как base64
     lastFrameImage.value = canvas.value.toDataURL('image/png')
     lastScannedData.value = code.data
-
-    // Показываем модальное окно с результатом
     showResultModal.value = true
-    errorMessage.value = '' // очищаем ошибки
+    errorMessage.value = ''
   } else {
     errorMessage.value = 'QR-код не найден. Попробуйте ещё раз.'
   }
@@ -67,7 +60,7 @@ const scanNow = () => {
 
 const drawGreenBorder = (ctx, location) => {
   ctx.strokeStyle = '#00ff00'
-  ctx.lineWidth = 10
+  ctx.lineWidth = 12
   ctx.beginPath()
   ctx.moveTo(location.topLeftCorner.x, location.topLeftCorner.y)
   ctx.lineTo(location.topRightCorner.x, location.topRightCorner.y)
@@ -77,24 +70,21 @@ const drawGreenBorder = (ctx, location) => {
   ctx.stroke()
 }
 
-// Закрытие модалки
 const closeModal = () => {
   showResultModal.value = false
 }
 </script>
+
 <template>
-  <div class="scanner-container">
+  <div class="app">
     <!-- Камера -->
     <div class="camera-wrapper">
       <video ref="video" playsinline muted class="camera-video"></video>
       <canvas ref="canvas" style="display: none;"></canvas>
-
-      <div v-if="!stream" class="placeholder">
-        Камера не доступна
-      </div>
+      <div v-if="!stream" class="placeholder">Камера недоступна</div>
     </div>
 
-    <!-- Ошибки -->
+    <!-- Сообщение об ошибке -->
     <div v-if="errorMessage" class="error-message">
       {{ errorMessage }}
     </div>
@@ -104,7 +94,7 @@ const closeModal = () => {
       Сканировать QR-код
     </button>
 
-    <!-- Модальное окно с результатом -->
+    <!-- Модалка с результатом -->
     <QrResultModal
       v-if="showResultModal"
       :scanned-data="lastScannedData"
@@ -115,27 +105,31 @@ const closeModal = () => {
 </template>
 
 <style scoped>
-/* Главный контейнер — теперь просто центрирует всё на чистом фоне */
-.scanner-container {
-  min-height: 100vh;
-  background: white;              /* ← чистый белый фон (можно поменять на #f5f5f5, #000 и т.д.) */
+/* Главный контейнер — весь экран без прокрутки */
+.app {
+  position: fixed;
+  inset: 0;
+  background: #000;                     /* чёрный фон как на твоём скриншоте */
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px 60px;
-  gap: 30px;
+  justify-content: center;
+  gap: 32px;
+  padding: 20px;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Квадрат с камерой — остался прежний, но без серой обёртки */
+/* Квадрат камеры — строго 1:1, максимум 90% ширины экрана */
 .camera-wrapper {
   position: relative;
-  width: 100%;
-  max-width: 400px;
+  width: 90vw;
+  max-width: 420px;
   aspect-ratio: 1 / 1;
-  border-radius: 28px;
+  border-radius: 32px;
   overflow: hidden;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-  background: #000;               /* чёрный фон под видео */
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  background: #000;
 }
 
 .camera-video {
@@ -150,41 +144,43 @@ const closeModal = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0,0,0,0.85);
   color: white;
   font-size: 18px;
   text-align: center;
   padding: 20px;
 }
 
-/* Ошибки */
+/* Красное сообщение — как на скриншоте */
 .error-message {
   background: #ff3b30;
   color: white;
-  padding: 16px 24px;
-  border-radius: 16px;
+  padding: 16px 32px;
+  border-radius: 30px;
+  font-size: 17px;
   font-weight: 600;
-  max-width: 400px;
+  max-width: 90vw;
   text-align: center;
+  box-shadow: 0 8px 25px rgba(255, 59, 48, 0.3);
 }
 
-/* Кнопка — чуть больше воздуха снизу */
+/* Кнопка — точно как у тебя на фото */
 .scan-button {
   background: #000;
   color: white;
-  border: none;
-  padding: 20px 40px;
+  border: 3px solid white;
+  padding: 18px 40px;
   border-radius: 50px;
   font-size: 19px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s;
   min-width: 280px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s;
 }
 
 .scan-button:active {
-  transform: translateY(2px) scale(0.98);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  transform: scale(0.95);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 </style>
